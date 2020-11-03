@@ -7,7 +7,7 @@
 
 #define RESPONSE_DATA_LEN 4096
 
-//ÓÃÀ´½ÓÊÕ·þÎñÆ÷Ò»¸öbuffer
+//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Õ·ï¿½ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½buffer
 typedef struct login_response_data
 {
     login_response_data() {
@@ -21,7 +21,7 @@ typedef struct login_response_data
 }response_data_t;
 
 
-//´¦Àí´Ó·þÎñÆ÷·µ»ØµÄÊý¾Ý£¬½«Êý¾Ý¿½±´µ½argÖÐ
+//ï¿½ï¿½ï¿½ï¿½ï¿½Ó·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Øµï¿½ï¿½ï¿½ï¿½Ý£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ý¿ï¿½ï¿½ï¿½ï¿½ï¿½argï¿½ï¿½
 size_t deal_response(void *ptr, size_t n, size_t m, void *arg)
 {
     int count = m*n;
@@ -39,23 +39,23 @@ size_t deal_response(void *ptr, size_t n, size_t m, void *arg)
 
 int main()
 {
-    
+
 
     char *post_str = NULL;
-   
+
 	CURL* curl = NULL;
 	CURLcode res;
-    response_data_t responseData;//×¨ÃÅÓÃÀ´´æ·Å´Ó·þÎñÆ÷·µ»ØµÄÊý¾Ý
-    //³õÊ¼»¯curl¾ä±ú
+    response_data_t responseData;//×¨ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Å´Ó·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Øµï¿½ï¿½ï¿½ï¿½ï¿½
+    //ï¿½ï¿½Ê¼ï¿½ï¿½curlï¿½ï¿½ï¿½
     curl = curl_easy_init();
     if(curl == NULL) {
         return 1;
     }
 
-    //·â×°Ò»¸öÊý¾ÝÐ­Òé
+    //ï¿½ï¿½×°Ò»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð­ï¿½ï¿½
     /*
 
-       ====¸ø·þÎñ¶ËµÄÐ­Òé====
+       ====ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ëµï¿½Ð­ï¿½ï¿½====
      http://ip:port/login [json_data]
     {
         username: "gailun",
@@ -65,7 +65,7 @@ int main()
      *
      *
      * */
-    //£¨1£©·â×°Ò»¸öjson×Ö·û´®
+    //ï¿½ï¿½1ï¿½ï¿½ï¿½ï¿½×°Ò»ï¿½ï¿½jsonï¿½Ö·ï¿½ï¿½ï¿½
     cJSON *root = cJSON_CreateObject();
 
     cJSON_AddStringToObject(root, "username", "ldw");
@@ -77,40 +77,41 @@ int main()
     root = NULL;
 
 
-    //(2) Ïòweb·þÎñÆ÷ ·¢ËÍhttpÇëÇó ÆäÖÐpostÊý¾Ý json×Ö·û´®
-    //1 ÉèÖÃcurl url
-    curl_easy_setopt(curl, CURLOPT_URL, "https://172.16.1.96:8080/login");
+    //(2) ï¿½ï¿½webï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½httpï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½postï¿½ï¿½ï¿½ï¿½ jsonï¿½Ö·ï¿½ï¿½ï¿½
+    //1 ï¿½ï¿½ï¿½ï¿½curl url
+    // curl_easy_setopt(curl, CURLOPT_URL, "https://172.16.1.96:8080/login");
+    curl_easy_setopt(curl, CURLOPT_URL, "https://0.0.0.0:8080/login");
 
-    //¿Í»§¶ËºöÂÔCAÖ¤ÊéÈÏÖ¤ ÓÃÓÚhttpsÌø¹ýÖ¤ÊéÈÏÖ¤
+    //ï¿½Í»ï¿½ï¿½Ëºï¿½ï¿½ï¿½CAÖ¤ï¿½ï¿½ï¿½ï¿½Ö¤ ï¿½ï¿½ï¿½ï¿½httpsï¿½ï¿½ï¿½ï¿½Ö¤ï¿½ï¿½ï¿½ï¿½Ö¤
     curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, false);
     curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, false);
 
-    //2 ¿ªÆôpostÇëÇó¿ª¹Ø
+    //2 ï¿½ï¿½ï¿½ï¿½postï¿½ï¿½ï¿½ó¿ª¹ï¿½
     curl_easy_setopt(curl, CURLOPT_POST, true);
-    //3 Ìí¼ÓpostÊý¾Ý
+    //3 ï¿½ï¿½ï¿½ï¿½postï¿½ï¿½ï¿½ï¿½
     curl_easy_setopt(curl, CURLOPT_POSTFIELDS, post_str);
 
-    //4 Éè¶¨Ò»¸ö´¦Àí·þÎñÆ÷ÏìÓ¦µÄ»Øµ÷º¯Êý
+    //4 ï¿½è¶¨Ò»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ó¦ï¿½Ä»Øµï¿½ï¿½ï¿½ï¿½ï¿½
     curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, deal_response);
 
-    //5 ¸ø»Øµ÷º¯Êý´«µÝÒ»¸öÐÎ²Î
+    //5 ï¿½ï¿½ï¿½Øµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½Î²ï¿½
     curl_easy_setopt(curl, CURLOPT_WRITEDATA, &responseData);
 
-    //6 Ïò·þÎñÆ÷·¢ËÍÇëÇó,µÈ´ý·þÎñÆ÷µÄÏìÓ¦
+    //6 ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½,ï¿½È´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ó¦
     res = curl_easy_perform(curl);
     if (res != CURLE_OK) {
         return 1;
     }
     curl_easy_cleanup(curl);
-    
-    //£¨3£©  ´¦Àí·þÎñÆ÷ÏìÓ¦µÄÊý¾Ý ´Ë¿ÌµÄresponseData¾ÍÊÇ´Ó·þÎñÆ÷»ñÈ¡µÄÊý¾Ý
+
+    //ï¿½ï¿½3ï¿½ï¿½  ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ó¦ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ë¿Ìµï¿½responseDataï¿½ï¿½ï¿½Ç´Ó·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
     /*
 
-      //³É¹¦
+      //ï¿½É¹ï¿½
     {
         result: "ok",
     }
-    //Ê§°Ü
+    //Ê§ï¿½ï¿½
     {
         result: "error",
         reason: "why...."
@@ -118,27 +119,27 @@ int main()
 
      *
      * */
-    //(4) ½âÎö·þÎñÆ÷·µ»ØµÄjson×Ö·û´®
+    //(4) ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Øµï¿½jsonï¿½Ö·ï¿½ï¿½ï¿½
     //cJSON *root;
     root = cJSON_Parse(responseData.data);
 
     cJSON *result = cJSON_GetObjectItem(root, "result");
     if(result && strcmp(result->valuestring, "ok") == 0) {
 	    printf("data:%s\n",responseData.data);
-        //µÇÂ½³É¹¦
+        //ï¿½ï¿½Â½ï¿½É¹ï¿½
         return 0;
 
     }
     else {
-        //µÇÂ½Ê§°Ü
+        //ï¿½ï¿½Â½Ê§ï¿½ï¿½
         cJSON* reason = cJSON_GetObjectItem(root, "reason");
         if (reason) {
-            //ÒÑÖª´íÎó
+            //ï¿½ï¿½Öªï¿½ï¿½ï¿½ï¿½
            return 1;
 
         }
         else {
-            //Î´ÖªµÄ´íÎó
+            //Î´Öªï¿½Ä´ï¿½ï¿½ï¿½
           return 1;
         }
 

@@ -1,6 +1,6 @@
 /**
  * @file https-server.c
- * @brief  
+ * @brief
  * @author liu_danbing
  * @version 1.0
  * @date 2016-10-26
@@ -50,7 +50,7 @@ unsigned short serverPort = COMMON_HTTPS_PORT;
 /* Instead of casting between these types, create a union with all of them,
  * to avoid -Wstrict-aliasing warnings. */
 typedef union
-{ 
+{
     struct sockaddr_storage ss;
     struct sockaddr sa;
     struct sockaddr_in in;
@@ -64,7 +64,7 @@ typedef union
  */
 static void
 login_cb (struct evhttp_request *req, void *arg)
-{ 
+{
     struct evbuffer *evb = NULL;
     const char *uri = evhttp_request_get_uri (req);
     struct evhttp_uri *decoded = NULL;
@@ -81,7 +81,7 @@ login_cb (struct evhttp_request *req, void *arg)
 
     /* 这里只处理Post请求, Get请求，就直接return 200 OK  */
     if (evhttp_request_get_command (req) != EVHTTP_REQ_POST)
-    { 
+    {
         evhttp_send_reply (req, 200, "OK", NULL);
         return;
     }
@@ -91,7 +91,7 @@ login_cb (struct evhttp_request *req, void *arg)
     //判断此URI是否合法
     decoded = evhttp_uri_parse (uri);
     if (! decoded)
-    { 
+    {
         printf ("It's not a good URI. Sending BADREQUEST\n");
         evhttp_send_error (req, HTTP_BADREQUEST, 0);
         return;
@@ -162,13 +162,73 @@ login_cb (struct evhttp_request *req, void *arg)
     free(response_data);
 }
 
+static void uploadCallback(struct evhttp_request *req, void *arg) {
+
+    const char *uri = evhttp_request_get_uri(req);
+    printf("server get resquest method: %d\n", evhttp_request_get_command(req));
+    printf("server uploader from %s...\n", uri);
+    // if get request
+    if (evhttp_request_get_command(req) == EVHTTP_REQ_GET) {
+        struct evbuffer *buf = evbuffer_new();
+        if (buf == NULL) {
+            return;
+        }
+        evbuffer_add_printf(buf, "Requested: %s\n", uri);
+        evhttp_send_reply(req, HTTP_OK, "OK", buf);
+        return;
+    }
+
+    if (evhttp_request_get_command(req) == EVHTTP_REQ_PUT) {
+        // uri is valid
+        struct evhttp_uri *decoded = evhttp_uri_parse(uri);
+        if (!decoded) {
+            evhttp_send_error(req, HTTP_BADREQUEST, 0);
+            return;
+        }
+        struct evbuffer *buf = evhttp_request_get_input_buffer(req);
+        evbuffer_add(buf, "", 1);
+        char *payload = (char *)evbuffer_pullup(buf, -1);
+        int postDataLen = evbuffer_get_length(buf);
+
+        FILE *file = fopen("b.jpg", "w");
+        if (file) {
+            fwrite(payload, postDataLen, 1, file);
+            fclose(file);
+        }
+
+        printf("get data length: %d\n", postDataLen);
+
+        evhttp_add_header(evhttp_request_get_output_headers(req), "Server", MYHTTPD_SIGNATURE);
+        evhttp_add_header(evhttp_request_get_output_headers(req), "Content-Type", "text/plain; charset=UTF-8");
+        evhttp_add_header(evhttp_request_get_output_headers(req), "Connection", "close");
+
+        // response
+        cJSON *root = cJSON_CreateObject();
+        cJSON_AddStringToObject(root, "upload", "ok");
+        char *responseData = cJSON_Print(root);
+        cJSON_Delete(root);
+
+        struct evbuffer *evb = evbuffer_new();
+        evbuffer_add_printf(evb, "%s", responseData);
+        //将封装好的evbuffer 发送给客户端
+        evhttp_send_reply(req, HTTP_OK, "OK", evb);
+        if (decoded)
+            evhttp_uri_free (decoded);
+
+        if (evb)
+            evbuffer_free (evb);
+
+        free(responseData);
+    }
+}
+
 /**
  * This callback is responsible for creating a new SSL connection
  * and wrapping it in an OpenSSL bufferevent.  This is the way
  * we implement an https server instead of a plain old http server.
  */
 static struct bufferevent* bevcb (struct event_base *base, void *arg)
-{ 
+{
     struct bufferevent* r;
     SSL_CTX *ctx = (SSL_CTX *) arg;
 
@@ -183,7 +243,7 @@ static struct bufferevent* bevcb (struct event_base *base, void *arg)
 static void server_setup_certs (SSL_CTX *ctx,
         const char *certificate_chain,
         const char *private_key)
-{ 
+{
     info_report ("Loading certificate chain from '%s'\n"
             "and private key from '%s'\n",
             certificate_chain, private_key);
@@ -199,15 +259,15 @@ static void server_setup_certs (SSL_CTX *ctx,
 }
 
 static int serve_some_http (void)
-{ 
+{
     struct event_base *base;
     struct evhttp *http;
     struct evhttp_bound_socket *handle;
 
-    
+
     base = event_base_new ();
     if (! base)
-    { 
+    {
         fprintf (stderr, "Couldn't create an event_base: exiting\n");
         return 1;
     }
@@ -238,11 +298,11 @@ static int serve_some_http (void)
     /* 选择服务器证书 和 服务器私钥. */
     const char *certificate_chain = "server-certificate-chain.pem";
     const char *private_key = "server-private-key.pem";
-    /* 设置服务器证书 和 服务器私钥 到 
+    /* 设置服务器证书 和 服务器私钥 到
      OPENSSL ctx上下文句柄中 */
     server_setup_certs (ctx, certificate_chain, private_key);
 
-    /* 
+    /*
         使我们创建好的evhttp句柄 支持 SSL加密
         实际上，加密的动作和解密的动作都已经帮
         我们自动完成，我们拿到的数据就已经解密之后的
@@ -253,16 +313,17 @@ static int serve_some_http (void)
     //默认回调
     //专属uri路径回调
     evhttp_set_cb(http, "/login", login_cb, NULL);
+    evhttp_set_cb(http, "/upload", uploadCallback, NULL);
 
     /* 设置监听IP和端口 */
-    handle = evhttp_bind_socket_with_handle (http, "0.0.0.0", serverPort);
+    handle = evhttp_bind_socket_with_handle (http, "172.16.6.47", serverPort);
     if (! handle)
-    { 
+    {
         fprintf (stderr, "couldn't bind to port %d. Exiting.\n",(int) serverPort);
         return 1;
     }
 
-    { 
+    {
         /* 打印收到的客户端链接信息  */
         sock_hop ss;
         evutil_socket_t fd;
@@ -276,22 +337,22 @@ static int serve_some_http (void)
         memset (&ss, 0, sizeof(ss));
 
         if (getsockname (fd, &ss.sa, &socklen))
-        { 
+        {
             perror ("getsockname() failed");
             return 1;
         }
         if (ss.ss.ss_family == AF_INET)
-        { 
+        {
             got_port = ntohs (ss.in.sin_port);
             inaddr = &ss.in.sin_addr;
         }
         else if (ss.ss.ss_family == AF_INET6)
-        { 
+        {
             got_port = ntohs (ss.i6.sin6_port);
             inaddr = &ss.i6.sin6_addr;
         }
         else
-        { 
+        {
             fprintf (stderr, "Weird address family %d\n", ss.ss.ss_family);
             return 1;
         }
@@ -300,7 +361,7 @@ static int serve_some_http (void)
         if (addr)
             printf ("Listening on %s:%d\n", addr, got_port);
         else
-        { 
+        {
             fprintf (stderr, "evutil_inet_ntop failed\n");
             return 1;
         }
@@ -314,9 +375,9 @@ static int serve_some_http (void)
 }
 
 int main (int argc, char **argv)
-{ 
+{
     /*OpenSSL 初始化 */
-    common_setup ();              
+    common_setup ();
 
     if (argc > 1) {
         char *end_ptr;
